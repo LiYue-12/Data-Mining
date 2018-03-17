@@ -1,0 +1,244 @@
+---
+title: "HW1"
+author: "Yue Li"
+date: "1/19/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Task 1
+Read the data description.Check if there is missing value.Identify and report response variable and predictors (also called explanatory variables or features). Report the numerical variables and categorical variables in the dataset.
+
+response variable: G3
+predictors: other 31 attributes(school, sex, age, address, famsize, Pstatus, Medu, Fedu, Mjob, Fjob, reason, guardian, traveltime, studytime, failures, schoolsup, famsup, paid, activities, nursery, higher, internet, romantic, famrel, freetime, goout, Dalc, Walc, health, absences, G1 and G2).
+
+numerical variables: age, Medu, Fedu, traveltime, studytime, failures, famrel, freetime, goout, Dalc, Walc, health, absences, G1, G2, G3.
+categorical variables: Mjob, Fjob, reason, guardian
+
+
+#Task 2
+Explorethedataset,andgeneratebothstatisticalandgraphical summary. To simplify the task, only consider the following 10 variables in this exploration: age, address, Pstatus, activities, higher, internet, absences, G1, G2, G3.
+```{r cars}
+library(ggplot2)
+data.file=
+'http://www.yurulin.com/class/spring2018_datamining/data/student-mat.csv'
+grade = read.csv(data.file , header = TRUE , sep = ';')
+
+#medu=grade$Medu
+a1= summary(grade$age)
+b1= sd(grade$age)
+Age=c(a1,b1)
+
+a2= summary(grade$absences)
+b2= sd(grade$absences)
+Absence= c(a2,b2)
+
+a3= summary(grade$G1)
+b3= sd(grade$G1)
+Grade1= c(a3,b3)
+
+a4= summary(grade$G2)
+b4= sd(grade$G2)
+Grade2= c(a4,b4)
+
+a5= summary(grade$G3) 
+b5= sd(grade$G3)
+Grade3= c(a5,b5)
+df=data.frame(Age,Absence,Grade1,Grade2,Grade3)
+df
+
+colname<-c("age","absences","G1","G2","G3")
+rowname<-c("min","1stQu","median","mean","3rdQu","max","sd")
+sum_table<-matrix(c(Age,Absence,Grade1,Grade2,Grade3),nrow=7,ncol=5,byrow=TRUE,dimnames = list(rowname,colname))
+sum_table
+```
+
+#Task 2.b
+
+```{r b,cho=FALSE}
+library(ggplot2)
+ggplot(grade,aes(x=age))+geom_density()        # age has skew(to the right) distribution  
+ggplot(grade,aes(x=absences))+geom_density()     #absences has skew(to the right) distribution 
+ggplot(grade,aes(x=G1))+geom_density()           # G1 has a normal distribution 
+ggplot(grade,aes(x=G2))+geom_density()          # G2 has a normal distribution 
+ggplot(grade,aes(x=G3))+geom_density()           # G3 has a normal distribution 
+```
+
+
+
+
+#Task 2.c
+
+```{r pressure, echo=FALSE}
+library(ggplot2)
+cor(grade$age,grade$G3)       #there's no obvious relationship between these two variables
+cor(grade$absences,grade$G3)     #there'S no obvious relationship between these two variables
+cor(grade$G1,grade$G3)          # the relationship between G1 and G3 is strong
+cor(grade$G2,grade$G3)          #the relationship between G2 and G3 is stronger
+
+ggplot(grade, aes(x = age, y = G3)) + geom_point(shape=1) + geom_smooth(method='lm') + theme_bw()
+ggplot(grade, aes(x = absences, y = G3)) + geom_point(shape=1) + geom_smooth(method='lm') + theme_bw()
+ggplot(grade, aes(x = G1, y = G3)) + geom_point(shape=1) + geom_smooth(method='lm') + theme_bw()
+ggplot(grade, aes(x = G2, y = G3)) + geom_point(shape=1) + geom_smooth(method='lm') + theme_bw()
+```
+according to the correlation result:
+age and G3 have a very slight negative correlation( -0.1615794);
+absences and G3 have a very slight positive correlation(0.03424732);
+G1 and G3 have a strong positive linear relation(0.8014679);
+G2 and G3 have a strong positive linear relation(0.904868).
+
+
+#Task 2.d
+```{r density}
+ggplot(grade, aes(x = G3,color=address))+geom_density()
+ggplot(grade, aes(x = G3,color=Pstatus))+geom_density()
+ggplot(grade, aes(x = G3,color=activities))+geom_density()
+ggplot(grade, aes(x = G3,color=higher))+geom_density()
+ggplot(grade, aes(x = G3,color=internet))+geom_density()
+
+```
+#Task 2.e
+The response viriables is not significantly different for students with and without extra-curricular activities.Because from the conditional density plot of G3, the curves of students with and without extra-curricular activities are generally corresponded. 
+
+
+#Task 3
+Applyregressionanalysisonthedata.Evaluatethemodelaswellasthe impact of different predictors.
+```{r setAll}
+#ggplot(grade, aes(x = all, y = G3))+geom_point()+geom_smooth(method=lm,se=FALSE)
+
+fit=lm(G3~school+sex+age+address+famsize+Pstatus+Medu+Fedu+Mjob+Fjob+reason+guardian+traveltime+studytime+failures+schoolsup+famsup+paid+activities+nursery+higher+internet+romantic+famrel+freetime+goout+Dalc+Walc+health+absences+G1+G2,data=grade)
+summary(fit)
+mean.mse = mean((rep(mean(grade$G3),length(grade$G3)) - grade$G3)^2)
+model.mse = mean(residuals(fit)^2)
+rmse = sqrt(model.mse)
+rmse
+```
+R-squared: 0.8458
+
+Adjusted R-squared: 0.8279
+
+RMSE: 1.796979
+
+
+#Task 3.b
+
+```{r SetAll}
+
+n = length(grade$G3)
+error = dim(n)
+for (k in 1:n) {
+  train1 = c(1:n)
+  train = train1[train1!=k] 
+  m2 = lm(G3 ~ school+sex+age+address+famsize+Pstatus+Medu+Fedu+Mjob+Fjob+reason+guardian+traveltime+studytime+failures+schoolsup+famsup+paid+activities+nursery+higher+internet+romantic+famrel+freetime+goout+Dalc+Walc+health+absences+G1+G2, data=grade[train ,])
+  pred = predict(m2, newdat=grade[-train ,])
+  obs = grade$G3[-train]
+  error[k] = obs-pred
+}
+me=mean(error)
+me
+rmse=sqrt(mean(error^2))
+rmse
+```
+
+
+
+```{r SetA}
+
+n = length(grade$G3)    
+error = dim(n)
+for (k in 1:n) {
+  train1 = c(1:n)
+  train = train1[train1!=k] 
+  m2 = lm(G3 ~ school+sex+age+address+Pstatus+Medu+Fedu+Mjob+Fjob+traveltime+studytime+failures+absences+G1+G2, data=grade[train ,])
+  pred = predict(m2, newdat=grade[-train ,])
+  obs = grade$G3[-train]
+  error[k] = obs-pred
+}
+me=mean(error)
+me
+rmse=sqrt(mean(error^2))
+rmse
+```
+
+```{r SetB}
+
+
+n = length(grade$G3)
+error = dim(n)
+for (k in 1:n) {
+  train1 = c(1:n)
+  train = train1[train1!=k] 
+  m2 = lm( G3~school+sex+age+studytime+failures+absences+G1+G2, data=grade[train ,])
+  pred = predict(m2, newdat=grade[-train ,])
+  obs = grade$G3[-train]
+  error[k] = obs-pred
+}
+me=mean(error)
+me
+rmse=sqrt(mean(error^2))
+rmse
+```
+
+```{r SetC}
+
+n = length(grade$G3)
+error = dim(n)
+for (k in 1:n) {
+  train1 = c(1:n)
+  train = train1[train1!=k] 
+  m2 = lm( G3~school+sex+age+address+Pstatus+Medu+Fedu+Mjob+Fjob+traveltime+G1+G2, data=grade[train ,])
+  pred = predict(m2, newdat=grade[-train ,])
+  obs = grade$G3[-train]
+  error[k] = obs-pred
+}
+me=mean(error)
+me
+rmse=sqrt(mean(error^2))
+rmse
+```
+ME(SetAll)=-0.00244707
+
+ME(SetA)=0.0007369704
+
+ME(SetB)=0.002483432
+
+ME(SetC)=0.001972788
+
+RMSE(SetAll)=2.01871
+
+RMSE(SetA)=1.968539
+
+RMSE(SetB)=1.928921
+
+RMSE(SetC)=1.983338
+
+Since the RMSE with setB is the lowest and the ME with setB is higher.Thus, the model of all predictors performs better than other three models with three sets of predictors. 
+
+
+#Task 3.c
+```{r 3c}
+library(locfit)
+fit <- locfit(G3~lp(age,nn=0.5),data=grade)          
+plot(fit)
+
+n = length(grade$G3)
+error = dim(n)
+for (k in 1:n) {
+  train1 = c(1:n)
+  train = train1[train1!=k] 
+  m2 = lm(G3~school+traveltime+failures+absences+G1+G2,data=grade[train ,])
+  pred = predict(m2, newdat=grade[-train ,])
+  obs = grade$G3[-train]
+  error[k] = obs-pred
+}
+me=mean(error)
+me 
+rmse=sqrt(mean(error^2))
+rmse 
+```
+#task 3.d
+
+above all, I think the model with predictors in SetB is the besst model.  Since the RMSE of setB is the lowest, which means the predicted value is close to the value we have.
